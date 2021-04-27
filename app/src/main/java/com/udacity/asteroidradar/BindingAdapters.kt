@@ -1,8 +1,13 @@
 package com.udacity.asteroidradar
 
+import android.provider.Settings.Global.getString
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.net.toUri
 import androidx.databinding.BindingAdapter
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -52,4 +57,34 @@ fun ImageView.bindContentDescriptionToAsteroidStatus(isHazardous: Boolean) {
     } else {
         contentDescription = context.getString(R.string.not_hazardous_asteroid_status)
     }
+}
+
+@BindingAdapter("imageOfTheDay")
+fun ImageView.bindImageOfTheDay(url: String?)
+{
+    Timber.i("bindImageOfTheDay")
+    url?.let {
+        val imgUri = it.toUri().buildUpon().scheme("https").build()
+        Timber.i("imgUri: ${imgUri.encodedPath}")
+        Glide.with(context)
+            .load(imgUri)
+            .apply(
+                RequestOptions()
+                .placeholder(R.drawable.placeholder_picture_of_day)
+                .error(R.drawable.ic_broken_image))
+            .into(this)
+    }
+}
+
+@BindingAdapter("imageOfTheDayContentDescription")
+fun ImageView.bindImageOfTheDayContentDescription(content: String?)
+{
+    if (content != null) {
+        contentDescription = String.format(context.getString(R.string.nasa_picture_of_day_content_description_format), content)
+    }
+    else
+    {
+        contentDescription = context.getString(R.string.this_is_nasa_s_picture_of_day_showing_nothing_yet)
+    }
+
 }

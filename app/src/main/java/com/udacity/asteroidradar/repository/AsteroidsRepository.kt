@@ -18,8 +18,10 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
+import retrofit2.HttpException
 import retrofit2.Response
 import timber.log.Timber
+import java.text.SimpleDateFormat
 import java.util.*
 
 class AsteroidsRepository(private val database: AsteroidsDatabase) {
@@ -28,32 +30,18 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
     val asteroidContainer: LiveData<NetworkAsteroidContainer>
         get() = _asteroidContainer
 
+    private val _pictureOfTheDayUrl = MutableLiveData<String>()
+    val pictureOfTheDayUrl: LiveData<String>
+        get() = _pictureOfTheDayUrl
+
+    private val _pictureOfTheDayContentDescription = MutableLiveData<String?>()
+    val pictureOfTheDayContentDescription: LiveData<String?>
+        get() = _pictureOfTheDayContentDescription
+
     val asteroids: LiveData<List<Asteroid>> =
-        Transformations.map(database.asteroidsDatabaseDao.getAllAsteroids()) {
-            it.asDomainModel()
-        }
-
-    val asteroidsByToday: LiveData<List<Asteroid>> =
         Transformations.map(database.asteroidsDatabaseDao.getAllAsteroids()) { asteroids ->
-            val calendar = Calendar.getInstance()
-            val currentDate = calendar.time
-            asteroids.filter { asteroid ->
-                asteroid.closeApproachDate == currentDate
-            }.asDomainModel()
-        }
-
-    val asteroidsUntilEndDate: LiveData<List<Asteroid>> =
-        Transformations.map(database.asteroidsDatabaseDao.getAllAsteroids()) { asteroids ->
-
-            val calendar = Calendar.getInstance()
-            val currentDate = calendar.time
-
-            calendar.add(Calendar.DAY_OF_YEAR, Constants.DEFAULT_END_DATE_DAYS)
-            val endDate = calendar.time
-
-            asteroids.filter { asteroid ->
-                asteroid.closeApproachDate >= currentDate && asteroid.closeApproachDate <= endDate
-            }.asDomainModel()
+            Timber.i("Adding ${asteroids.size} asteroids to asteroids live data")
+            asteroids.asDomainModel()
         }
 
     suspend fun fetchAsteroids() {
@@ -63,31 +51,50 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
             val lastDay = getLastDayFormattedDate()
             val filter = Constants.API_FILTER_FORMAT.format(today, lastDay, Constants.API_KEY)
             Timber.i("requesting filter: \"${filter}\" from API")
-            Network.retrofitService.getAsteroids(
-                mapOf(
-                    "start_date" to today,
-                    "end_date" to lastDay,
-                    "api_key" to Constants.API_KEY
-                )
-            ).enqueue(object: Callback<String> {
-                override fun onResponse(call: Call<String>, response: Response<String>) {
-                    Timber.i("received successful response.")
-                    val asteroidContainer = parseAsteroidsJsonResult(JSONObject(response.body()))
-                    Timber.i("received ${asteroidContainer.asteroids.size} asteroids.")
-                    _asteroidContainer.value = asteroidContainer
-                }
 
-                override fun onFailure(call: Call<String>, t: Throwable) {
-                    Timber.w("Fetching Asteroids failed with failure ${t.message}.")
-                }
-            })
+            try {
+                val response = Network.retrofitService.getAsteroids(
+                    mapOf(
+                        "start_date" to today,
+                        "end_date" to lastDay,
+                        "api_key" to Constants.API_KEY
+                    )
+                )
+                Timber.i("received successful response.")
+                val asteroidContainer = parseAsteroidsJsonResult(JSONObject(response))
+                Timber.i("received ${asteroidContainer.asteroids.size} asteroids.")
+                _asteroidContainer.postValue(asteroidContainer)
+            } catch (exception: Exception) {
+                Timber.w("Could not fetch Asteroids. Error message: ${exception.message}")
+            }
+        }
+    }
+
+    suspend fun fetchPictureOfTheDay() {
+        Timber.i("fetchPictureOfTheDay called")
+        withContext(Dispatchers.IO) {
+            try {
+                val response = Network.retrofitService.getPictureOfTheDay(Constants.API_KEY)
+                Timber.i("pictureOfTheDay url: ${response.url}")
+                _pictureOfTheDayUrl.postValue(response.url)
+                _pictureOfTheDayContentDescription.postValue(response.title)
+            } catch (exception: Exception) {
+                Timber.w("Could not fetch PictureOfTheDay. Error message: ${exception.message}")
+                _pictureOfTheDayUrl.postValue("")
+                _pictureOfTheDayContentDescription.postValue(null)
+            }
         }
     }
 
     suspend fun removeOldAsteroids() {
         withContext(Dispatchers.IO) {
             val calendar = Calendar.getInstance()
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
             val currentTime = calendar.time
+
             database.asteroidsDatabaseDao.clearOlderAsteroidsThan(currentTime)
         }
     }

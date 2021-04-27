@@ -21,4 +21,6 @@
     <string name="not_hazardous_asteroid_status">Not hazardous asteroid status</string>
     <string name="this_is_nasa_s_picture_of_day_showing_nothing_yet">This is NASA\'s picture of day, showing nothing yet</string>
     <string name="nasa_picture_of_day_content_description_format">NASA\'s picture of day: %s</string>
+    <string name="no_asteroids_could_be_shown">Could not find any asteroids :(</string>
+    <string name="asteroid_content_description">Click for asteroid details</string>
 </resources>

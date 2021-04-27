@@ -9,12 +9,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Query
 import retrofit2.http.QueryMap
 
 
 interface NasaApiService {
     @GET("neo/rest/v1/feed")
-    suspend fun getAsteroids(@QueryMap(encoded = true) options: Map<String, String>): Call<String>
+    suspend fun getAsteroids(@QueryMap(encoded = true) options: Map<String, String>): String
+
+    @GET("planetary/apod")
+    suspend fun getPictureOfTheDay(@Query("api_key") api_key: String): PictureOfTheDay
 }
 
 object Network {

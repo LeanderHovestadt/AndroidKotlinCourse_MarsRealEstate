@@ -6,6 +6,7 @@ import com.udacity.asteroidradar.network.Network
 import com.udacity.asteroidradar.network.NetworkAsteroid
 import com.udacity.asteroidradar.network.NetworkAsteroidContainer
 import org.json.JSONObject
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -44,6 +45,7 @@ fun parseAsteroidsJsonResult(jsonResult: JSONObject): NetworkAsteroidContainer {
 
             val asteroid = NetworkAsteroid(id, codename, formattedDate, absoluteMagnitude,
                     estimatedDiameter, relativeVelocity, distanceFromEarth, isPotentiallyHazardous)
+            Timber.i("Adding asteroid with close approach date: $formattedDate")
             asteroidList.add(asteroid)
         }
     }
@@ -58,7 +60,9 @@ private fun getNextSevenDaysFormattedDates(): ArrayList<String> {
     for (i in 0..Constants.DEFAULT_END_DATE_DAYS) {
         val currentTime = calendar.time
         val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
-        formattedDateList.add(dateFormat.format(currentTime))
+        val date = dateFormat.format(currentTime)
+        Timber.i("Adding $date to formattedDateList")
+        formattedDateList.add(date)
         calendar.add(Calendar.DAY_OF_YEAR, 1)
     }
 

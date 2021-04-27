@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#010613</color>
-    <color name="colorPrimaryDark">#010613</color>
-    <color name="colorAccent">#FF8282</color>
-    <color name="app_background">#010613</color>
-    <color name="default_text_color">#FFFFFF</color>
-    <color name="text_grey">#D2D2D2</color>
-    <color name="potentially_hazardous">#FF8282</color>
+    <color name="primaryColor">#5c6bc0</color>
+    <color name="primaryLightColor">#8e99f3</color>
+    <color name="primaryDarkColor">#26418f</color>
+    <color name="secondaryColor">#bdbdbd</color>
+    <color name="secondaryLightColor">#efefef</color>
+    <color name="secondaryDarkColor">#8d8d8d</color>
+    <color name="colorOnPrimary">#efefef</color>
+    <color name="colorOnSecondary">#1b1b1b</color>
+    <color name="primaryTextColor">@color/colorOnPrimary</color>
+    <color name="secondaryTextColor">@color/colorOnSecondary</color>
+    <color name="warningColor">#bf360c</color>
 </resources>

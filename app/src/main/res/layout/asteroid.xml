@@ -15,7 +15,10 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="80sp"
-        android:onClick="@{() -> clickListener.onClick(asteroid)}">
+        android:onClick="@{() -> clickListener.onClick(asteroid)}"
+        android:contentDescription="@string/asteroid_content_description"
+        android:layout_marginTop="3dp"
+        android:background="@color/secondaryColor">
 
         <TextView
             android:id="@+id/asteroid_name"
@@ -24,10 +27,12 @@
             android:layout_marginStart="24dp"
             android:textSize="18sp"
             android:textStyle="bold"
+            android:text="@{asteroid.codename}"
             app:layout_constraintBottom_toTopOf="@+id/asteroid_date"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="68347 (2001 KB67)" />
+            tools:text="68347 (2001 KB67)"
+            android:textColor="@color/secondaryTextColor"/>
 
         <TextView
             android:id="@+id/asteroid_date"
@@ -35,10 +40,12 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:textSize="14sp"
+            app:dateText="@{asteroid.closeApproachDate}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/asteroid_name"
-            tools:text="2020-02-08" />
+            tools:text="2020-02-08"
+            android:textColor="@color/secondaryTextColor"/>
 
         <ImageView
             android:id="@+id/imageView"

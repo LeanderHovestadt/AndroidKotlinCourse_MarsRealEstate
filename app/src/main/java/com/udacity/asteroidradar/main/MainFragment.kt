@@ -6,9 +6,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.databinding.FragmentMainBinding
-import com.udacity.asteroidradar.domain.Asteroid
+import timber.log.Timber
 
 class MainFragment : Fragment() {
 
@@ -26,6 +27,7 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        Timber.i("onCreateView called")
         val binding = FragmentMainBinding.inflate(inflater)
         binding.lifecycleOwner = this
 
@@ -36,11 +38,29 @@ class MainFragment : Fragment() {
         })
         binding.asteroidRecycler.adapter = viewModelAdapter
 
-        viewModel.shownAsteroidsFilter.observe(viewLifecycleOwner,  {
-            reloadAsteroids()
+        viewModel.asteroids.observe(viewLifecycleOwner, {
+            Timber.i("calling reloadAsteroids due to asteroids update")
+            if (!viewModel.shownAsteroidsFilter.hasObservers()) {
+                viewModel.shownAsteroidsFilter.observe(viewLifecycleOwner, {
+                    Timber.i("calling reloadAsteroids due to shownAsteroidsFilter update")
+                    reloadAsteroids()
+                })
+            } else {
+                reloadAsteroids()
+            }
         })
 
-
+        viewModel.showSnackbarEvent.observe(viewLifecycleOwner, Observer {
+            if (it == true) {
+                Timber.i("Showing SnackbarEvent...")
+                Snackbar.make(
+                    requireActivity().findViewById(R.id.asteroid_recycler),
+                    getString(R.string.no_asteroids_could_be_shown),
+                    Snackbar.LENGTH_LONG // How long to display the message.
+                ).show()
+                viewModel.doneShowSnackbarEvent()
+            }
+        })
 
         setHasOptionsMenu(true)
 
@@ -48,11 +68,8 @@ class MainFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Timber.i("onViewCreated called")
         super.onViewCreated(view, savedInstanceState)
-
-        viewModel.asteroids.observe(viewLifecycleOwner, {
-            reloadAsteroids()
-        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -70,16 +87,7 @@ class MainFragment : Fragment() {
     }
 
     private fun reloadAsteroids() {
-        when(viewModel.shownAsteroidsFilter.value) {
-            ShownAsteroidsFilter.SHOW_TODAY_ASTEROIDS -> {
-                viewModelAdapter?.submitList(viewModel.asteroidsByToday.value)
-            }
-            ShownAsteroidsFilter.SHOW_WEEK_ASTEROIDS -> {
-                viewModelAdapter?.submitList(viewModel.asteroidsUntilEndDate.value)
-            }
-            ShownAsteroidsFilter.SHOW_SAVED_ASTEROIDS -> {
-                viewModelAdapter?.submitList(viewModel.asteroids.value)
-            }
-        }
+        Timber.i("reloadAsteroids called")
+        viewModelAdapter?.submitList(viewModel.getAsteroids())
     }
 }
